@@ -6,12 +6,41 @@ jobs:
     steps:
       - name: Set up Git repository
         uses: actions/checkout@v2
-      - name: Compile LaTeX document
+      # compile main
+      - name: pdflatex main
         uses: dante-ev/latex-action@latest
         with:
+          working_directory: paper_template
           root_file: paper.tex
+          compiler: pdflatex
+          args: -interaction=nonstopmode -shell-escape
+      # bibliography
+      - name: bibtex main
+        uses: dante-ev/latex-action@latest
+        with:
+          working_directory: paper_template
+          root_file: paper.aux
+          compiler: bibtex
+          args: 
+      # second compilation
+      - name: pdflatex main
+        uses: dante-ev/latex-action@latest
+        with:
+          working_directory: paper_template
+          root_file: paper.tex
+          compiler: pdflatex
+          args: -interaction=nonstopmode -shell-escape
+      # final compilation
+      - name: pdflatex main
+        uses: dante-ev/latex-action@latest
+        with:
+          working_directory: paper_template
+          root_file: paper.tex
+          compiler: pdflatex
+          args: -interaction=nonstopmode -shell-escape
+      # artifact
       - name: upload_artifact
         uses: actions/upload-artifact@v3
         with:
           name: paper.pdf
-          path: ./paper.pdf
+          path: paper_template/paper.pdf
