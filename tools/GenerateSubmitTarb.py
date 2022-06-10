@@ -33,15 +33,23 @@ if dirpath == None:
     now = datetime.datetime.now() 
     dirpath = 'submission'+str(now.day)+str(now.month)+str(now.year)
 
-print("Directory name:", dirpath)
+# names of all tex
+papernames= {args.tex[i] : args.tex[i].rsplit('/',1)[1] for i in range(len(args.tex))}
+bblname   = args.bbl.rsplit('/',1)[1]
 
+
+# path of first .tex
+paperpath = args.tex[0].rsplit('/',1)[0]
+
+print("Directory name:", dirpath)
+print("Paper directory:",paperpath)
 # create dir
 try:
     os.mkdir(dirpath)
 except FileExistsError:
     print("WARNING: Dir already exists, over-writing")
 
-# fix .tex files given in
+# fix .tex files input
 # remove comments, change figure names
 
 # patterns for figs, comments, bbl
@@ -55,7 +63,7 @@ abcs     = list(string.ascii_lowercase)
 
 # copy the .bbl file to the new dir
 print("* Copying .bbl file", args.bbl)
-copyfile(args.bbl, dirpath+'/'+args.bbl)
+copyfile(args.bbl, dirpath+'/'+bblname)
 
 # read in old file and find the patterns
 for tx in args.tex:
@@ -75,7 +83,7 @@ for tx in args.tex:
         lns_bibl = find_pattern(lns, biblio)
 
     # create the new .tex in dir
-    texnew = dirpath+'/'+tx
+    texnew = dirpath+'/'+papernames[tx]
 
     figN     = 0
     subpltN  = 0
@@ -96,23 +104,24 @@ for tx in args.tex:
                 
                 # find path and extension of figure
                 figpath    = line.strip('\n').split("{")[1].split("}")[0]
+                cpfigpath  = paperpath+'/'+figpath
                 figext     = figpath.split('.')[-1]
                 
                 # rename it (based on name of .tex, figN and subpltN)
                 nm         = tx.split('.')[0]
                 newfigpath = 'fig'+nm+str(figN)+abcs[subpltN]+'.'+figext
                 subpltN    = subpltN+1
-                print("\t", figpath, "-->", dirpath+'/'+newfigpath)
+                print("\t", cpfigpath, "-->", dirpath+'/'+newfigpath)
 
                 # copy figure to dir
-                copyfile(figpath, dirpath+'/'+newfigpath)
+                copyfile(cpfigpath, dirpath+'/'+newfigpath)
                 
                 # replace figpath with newfig in line
                 line = line.replace(figpath, newfigpath)
 
             # bibliography
             if line.strip('\n') in lns_bibl:
-                line = r'\input{%s}' %args.bbl
+                line = r'\input{%s}' %bblname
 
             # remove comments at the end
             if line.strip('\n') in lns_comm:
