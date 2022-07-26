@@ -23,11 +23,7 @@ def create_webdriver():
 def arxiv_login(wd, usr, pwd, hrf):
     from selenium.webdriver.common.by import By
     # Open the website
-    wd.get('https://arxiv.org/')
-    # find the login button
-    login_button = wd.find_element(By.CLASS_NAME,'login')
-    # click it
-    login_button.click()
+    wd.get('https://arxiv.org/login')
 
     # Send id information
     usrname = wd.find_element(By.NAME, "username")
@@ -68,6 +64,10 @@ def arxiv_submit(usr, pwd, hrf, time="18:00:00"):
 
     # scheduler: run it at specified UTC time
     schedule.every().day.at(time).do(click_submit)
+
+    while True:
+      schedule.run_pending()
+      time.sleep(0.0001)
 
 
 if __name__ == '__main__':
