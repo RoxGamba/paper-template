@@ -10,6 +10,11 @@ https://towardsdatascience.com/controlling-the-web-with-python-6fceb22c5f08
 """
 
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+import pytz; from datetime import datetime
+
+arxiv_tz = pytz.timezone('America/New_York')
 
 def create_webdriver():
     options = webdriver.ChromeOptions()
@@ -18,7 +23,10 @@ def create_webdriver():
     options.add_argument('--disable-dev-shm-usage')
 
     # Using Chrome to access web
-    return webdriver.Chrome('chromedriver',options=options) 
+    #return webdriver.Chrome('chromedriver',options=options) 
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), 
+                            options=options
+                            ) 
 
 def arxiv_login(wd, usr, pwd, hrf):
     from selenium.webdriver.common.by import By
@@ -30,8 +38,8 @@ def arxiv_login(wd, usr, pwd, hrf):
     usrname.send_keys(usr)
 
     # Send pwd information
-    pwd     = wd.find_element(By.NAME, "password")
-    pwd.send_keys(pwd)
+    pswd     = wd.find_element(By.NAME, "password")
+    pswd.send_keys(pwd)
 
     # login
     submit_button = wd.find_element(By.XPATH,'//input[@value="Submit"]')
@@ -41,10 +49,10 @@ def arxiv_login(wd, usr, pwd, hrf):
     # eg: https://arxiv.org/submit/4013143/resume --> hrf = '4013143'
     update_button = wd.find_element(By.XPATH,('//a[@href="https://arxiv.org/submit/' + hrf + '/resume"]'))
     update_button.click()
-
+    print("Logged in and ready to submit!")
     return 0
 
-def arxiv_submit(usr, pwd, hrf, time="18:00:00"):
+def arxiv_submit(usr, pwd, hrf, timesub="18:00:00"):
     from   selenium.webdriver.common.by import By
     import schedule; import time
     
@@ -62,12 +70,14 @@ def arxiv_submit(usr, pwd, hrf, time="18:00:00"):
         submit_button.click()
         return schedule.CancelJob
 
-    # scheduler: run it at specified UTC time
-    schedule.every().day.at(time).do(click_submit)
+    # scheduler: run it at specified ET time
+    jobtime = datetime.now(arxiv_tz).replace(hour=int(timesub.split(':')[0]), minute=int(timesub.split(':')[1]), second=int(timesub.split(':')[2]))
+    schedule.every().day.at(jobtime.strftime("%H:%M")).do(click_submit)
 
+    # run the scheduler
     while True:
       schedule.run_pending()
-      time.sleep(0.0001)
+      time.sleep(0.00001)
 
 
 if __name__ == '__main__':
@@ -81,6 +91,8 @@ if __name__ == '__main__':
 
 
     args = parser.parse_args()
+
+    arxiv_submit(args.u, args.p, args.href, timesub="14:00:00")
 
     arxiv_submit(args.u, args.p, args.href)
 
