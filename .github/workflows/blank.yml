@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       # compile main
       - name: pdflatex main
         uses: dante-ev/latex-action@latest
@@ -40,7 +40,7 @@ jobs:
           args: -interaction=nonstopmode -shell-escape
       # artifact
       - name: upload_artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: paper.pdf
           path: paper_template/paper.pdf
